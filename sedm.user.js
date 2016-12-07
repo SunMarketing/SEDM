@@ -7,8 +7,8 @@
 // @include       http://www.sunitka.sk*
 // @author        Sun Marketing, s.r.o.  
 // @include       http://localhost:3000*
-// @downloadURL   https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.js
-// @updateURL     https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.js
+// @downloadURL   https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.user.js
+// @updateURL     https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.user.js
 // @icon          http://www.sunitka.cz/sedm/images/sedm.png
 // @description   SEDM je nástroj sloužící k analýze výsledků vyhledávaní fulltextových vyhledávačů Google a Seznam.cz. Za pomocí nástroje lze snadno získat data o hledanosti až padesáti klíčových slov ve vyhledávači Seznam.cz, počet nalezených výsledků na Seznam.cz i Google. Autory skriptu jsou Víťa Krchov, Matěj Velička a společnost Sun Marketing.
 // @version       0.37
