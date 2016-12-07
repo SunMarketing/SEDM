@@ -4,6 +4,7 @@
 // @require       http://code.jquery.com/jquery.min.js
 // @include       http://www.sunitka.cz*
 // @include       http://www.sunitka.sk*
+// @author        Sun Marketing, s.r.o.  
 // @include       http://localhost:3000*
 // @downloadURL   http://www.sunitka.cz/nastroje/sedm/sedm.user.js
 // @updateURL     http://www.sunitka.cz/nastroje/sedm/sedm.user.js
