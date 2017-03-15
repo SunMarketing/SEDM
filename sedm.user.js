@@ -1,4 +1,3 @@
-
 // ==UserScript==
 // @name          Search Engine Data Miner (SEDM)
 // @namespace     sedm
@@ -11,12 +10,12 @@
 // @updateURL     https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.user.js
 // @icon          http://www.sunitka.cz/sedm/images/sedm.png
 // @description   SEDM je nástroj sloužící k analýze výsledků vyhledávaní fulltextových vyhledávačů Google a Seznam.cz. Za pomocí nástroje lze snadno získat data o hledanosti až padesáti klíčových slov ve vyhledávači Seznam.cz, počet nalezených výsledků na Seznam.cz i Google. Autory skriptu jsou Víťa Krchov, Matěj Velička a společnost Sun Marketing.
-// @version       0.38
+// @version       0.39
 // @date          2017-03-15
 // @grant         GM_xmlhttpRequest
 // ==/UserScript==
 
-$(document).ready(function() {
+$(document).ready(function () {
     $('.greasemonkey_enabled').text('1');
     $('.install .row60 .check').removeClass('uncheck');
     $('.install .user_script .check').removeClass('uncheck');
@@ -31,13 +30,14 @@ $(document).ready(function() {
     GM_xmlhttpRequest({
         method: 'GET',
         url: googleHost() + '/ncr',
-        onload: function(response) {}
+        onload: function (response) {
+        }
     });
 
     window.competition_analysis = true;
     window.started = false;
 
-    $('.send_button').click(function() {
+    $('.send_button').click(function () {
         if (window.started == false) {
             window.started = true;
             window.keyword_logs = {
@@ -56,13 +56,13 @@ $(document).ready(function() {
         return false;
     });
 
-    $('.export').click(function() {
+    $('.export').click(function () {
         $('.export_data').val(JSON.stringify(dataForExport()));
         $('.export_form').submit();
         return false;
     });
 
-    $('.analysis_export').click(function() {
+    $('.analysis_export').click(function () {
         $('.analysis_export_data').val(JSON.stringify(dataForAnalysisExport()));
         $('.analysis_export_form').submit();
         return false;
@@ -72,7 +72,7 @@ $(document).ready(function() {
         $('.modal').removeClass('hide');
     }
 
-    $('.analyse_checkbox').click(function() {
+    $('.analyse_checkbox').click(function () {
         if ($(this).find('.check').hasClass('uncheck')) {
             $(this).find('.check').removeClass('uncheck');
             window.competition_analysis = true;
@@ -102,7 +102,7 @@ function getResults() {
 
     var index = 0;
 
-    interval = setInterval(function() {
+    interval = setInterval(function () {
         if (index < keywords.length) {
             var keyword = keywords[index];
             if (window.language == 'cs') {
@@ -147,7 +147,7 @@ function repeatRequests() {
     var google_keywords = window.google_not_processed_keywords.slice(0);
     var sklik_keywords = window.sklik_not_processed_keywords.slice(0);
 
-    reload_interval = setInterval(function() {
+    reload_interval = setInterval(function () {
         if (index < seznam_keywords.length || index < google_keywords.length || index < sklik_keywords.length) {
             if (index < google_keywords.length) {
                 keyword = google_keywords[index];
@@ -174,7 +174,7 @@ function repeatRequests() {
                 initializeAnalysisClipboard();
             } else {
                 $('.reload').removeClass('hide');
-                $('.reload_button').click(function() {
+                $('.reload_button').click(function () {
                     $('.keyword_logs .logs').html('');
                     $('.keyword_logs .logs').addClass('hide');
                     $('.keyword_logs').addClass('hide');
@@ -195,14 +195,15 @@ function getSeznamResultCount(keyword, index) {
     GM_xmlhttpRequest({
         method: 'GET',
         url: 'http://search.seznam.cz/?q=' + keyword,
-        onload: function(response) {
+        onload: function (response) {
             var div = document.createElement("div");
             div.innerHTML = response.responseText;
             if ($(div).find('#resultCount strong').length !== undefined && $(div).find('#resultCount strong').length > 0) {
+                console.log('exit 1');
                 var result_count = $($(div).find('#resultCount strong')[2]).text();
 
                 window.seznam_serp_count++;
-                $(div).find('.result').each(function(index) {
+                $(div).find('.result').each(function (index) {
                     analyseUrl($(this).find('.info a').prop('href'), index + 1, 'seznam');
                 });
 
@@ -212,8 +213,10 @@ function getSeznamResultCount(keyword, index) {
                     window.keyword_logs['seznam'].splice(window.keyword_logs['seznam'].indexOf(keyword), 1);
                 }
             } else {
+                console.log('exit 2');
                 if (window.seznam_not_processed_keywords.indexOf(keyword) == -1) {
-                    window.seznam_not_processed_keywords.push(keyword);
+                    //window.seznam_not_processed_keywords.push(keyword);
+                    console.log('exit 3');
                 } else {
                     if (window.keyword_logs['seznam'].indexOf(keyword) == -1) {
                         window.keyword_logs['seznam'].push(keyword);
@@ -239,7 +242,7 @@ function getGoogleResultCount(keyword, index) {
     GM_xmlhttpRequest({
         method: 'GET',
         url: url,
-        onload: function(response) {
+        onload: function (response) {
             var response_text = response.responseText;
             var patt = new RegExp("nebyl nalezen žádný odkaz");
             if (patt.test(response_text)) {
@@ -254,7 +257,7 @@ function getGoogleResultCount(keyword, index) {
                     tr_element.find('.result_count_google').text(match[1].replace(/,/g, ' '));
 
                     window.google_serp_count++;
-                    $(div).find('.srg div.g').not('#imagebox_bigimages, #newsbox, #lclbox, .card-section').each(function(index) {
+                    $(div).find('.srg div.g').not('#imagebox_bigimages, #newsbox, #lclbox, .card-section').each(function (index) {
                         analyseUrl($(this).find('h3 a').prop('href'), index + 1, 'google');
                     });
 
@@ -283,14 +286,16 @@ function loadResults(keyword, offset, index) {
     GM_xmlhttpRequest({
         method: 'GET',
         url: 'https://www.sklik.cz/api/v1/queries/captured?term=' + keyword + '&limit=20&offset=' + offset,
-        onload: function(response) {
+        onload: function (response) {
 
-            if(response.status < 300) {
+            var searchedKeyword;
+
+            if (response.status < 300) {
 
                 var resultJson = JSON.parse(response.responseText);
 
 
-                var searchedKeyword = resultJson.items.filter(function (obj) {
+                searchedKeyword = resultJson.items.filter(function (obj) {
                     return obj.name === keyword;
                 })[0];
 
@@ -311,7 +316,6 @@ function loadResults(keyword, offset, index) {
 function renderSklikResults(searchedKeywordResult, index) {
 
     var number, price, concurrency;
-
 
 
     if (searchedKeywordResult.avgCpc != undefined || searchedKeywordResult.avgCpc != null) {
@@ -347,7 +351,7 @@ function getSklikResultCount(keyword, index) {
 function analyseUrl(url, position, engine) {
     var parser = document.createElement('a');
     parser.href = url;
-    var site = $.grep(competitive_sites, function(competitive_site) {
+    var site = $.grep(competitive_sites, function (competitive_site) {
         return competitive_site.hostname == parser.hostname;
     });
     if (site == 0) {
@@ -361,6 +365,7 @@ function analyseUrl(url, position, engine) {
                 'seznam_serp_count': 0
             };
         } else {
+            console.log(positionPoints(position));
             attributes = {
                 'hostname': parser.hostname,
                 'google_points': 0,
@@ -393,7 +398,7 @@ function checkSklikSession() {
     GM_xmlhttpRequest({
         method: 'GET',
         url: 'https://www.sklik.cz/campaigns',
-        onload: function(response) {
+        onload: function (response) {
             patt = new RegExp('Sklik.cz');
             if (patt.test(response.responseText)) {
                 $('.install .sklik .check').addClass('uncheck');
@@ -411,9 +416,9 @@ function checkSklikSession() {
 function dataForExport() {
     var data = new Array();
 
-    $('#keywords_table tbody tr').each(function() {
+    $('#keywords_table tbody tr').each(function () {
         var attrs = new Array();
-        $(this).find('td').each(function(index) {
+        $(this).find('td').each(function (index) {
             var val;
             if (index == 0) {
                 val = $(this).text();
@@ -474,11 +479,11 @@ function showCompetitionAnalysis() {
     }
     $('#competitive_sites').removeClass('hide');
 
-    $('#competitive_sites thead').click(function() {
+    $('#competitive_sites thead').click(function () {
         $(this).next('tbody').toggleClass('hide');
     });
 
-    $('a.help').click(function() {
+    $('a.help').click(function () {
         return false;
     });
 }
@@ -641,6 +646,10 @@ function googleSerpPercent(site) {
 }
 
 function seznamSerpPercent(site) {
+    console.log(window.seznam_serp_count);
+    if(isNaN(window.seznam_serp_count) || window.seznam_serp_count ===0)
+        return ' -';
+
     return roundNumber((100 / window.seznam_serp_count) * site.seznam_serp_count);
 }
 
@@ -661,7 +670,7 @@ function serpPercent(site) {
 }
 
 function sortSites(sites) {
-    var arr = sites.sort(function(a, b) {
+    var arr = sites.sort(function (a, b) {
         var a_points;
         var b_points;
         if (window.language == 'cs') {
@@ -688,7 +697,7 @@ function siteRank(site) {
     }
 
     var rank = (points / (serp_count * 10) * 100);
-    return roundNumber(rank)
+    return roundNumber(rank);
 }
 
 function roundNumber(number) {
