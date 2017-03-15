@@ -5,14 +5,14 @@
 // @require       http://code.jquery.com/jquery.min.js
 // @include       http://www.sunitka.cz*
 // @include       http://www.sunitka.sk*
-// @author        Sun Marketing, s.r.o.  
+// @author        Sun Marketing, s.r.o.
 // @include       http://localhost:3000*
 // @downloadURL   https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.user.js
 // @updateURL     https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.user.js
 // @icon          http://www.sunitka.cz/sedm/images/sedm.png
 // @description   SEDM je nástroj sloužící k analýze výsledků vyhledávaní fulltextových vyhledávačů Google a Seznam.cz. Za pomocí nástroje lze snadno získat data o hledanosti až padesáti klíčových slov ve vyhledávači Seznam.cz, počet nalezených výsledků na Seznam.cz i Google. Autory skriptu jsou Víťa Krchov, Matěj Velička a společnost Sun Marketing.
-// @version       0.37
-// @date          2016-12-07
+// @version       0.38
+// @date          2017-03-15
 // @grant         GM_xmlhttpRequest
 // ==/UserScript==
 
@@ -198,7 +198,7 @@ function getSeznamResultCount(keyword, index) {
         onload: function(response) {
             var div = document.createElement("div");
             div.innerHTML = response.responseText;
-            if ($(div).find('#resultCount strong').length > 0) {
+            if ($(div).find('#resultCount strong').length !== undefined && $(div).find('#resultCount strong').length > 0) {
                 var result_count = $($(div).find('#resultCount strong')[2]).text();
 
                 window.seznam_serp_count++;
@@ -284,16 +284,21 @@ function loadResults(keyword, offset, index) {
         method: 'GET',
         url: 'https://www.sklik.cz/api/v1/queries/captured?term=' + keyword + '&limit=20&offset=' + offset,
         onload: function(response) {
-            var resultJson = JSON.parse(response.responseText);
+
+            if(response.status < 300) {
+
+                var resultJson = JSON.parse(response.responseText);
 
 
+                var searchedKeyword = resultJson.items.filter(function (obj) {
+                    return obj.name === keyword;
+                })[0];
 
-            var searchedKeyword = resultJson.items.filter(function(obj) {
-                return obj.name === keyword;
-            })[0];
-
-
-            if (searchedKeyword === undefined) loadResults(keyword, offset + 1, index);
+            }
+            if (searchedKeyword === undefined) {
+                renderSklikResults({'avgCpc': undefined, 'competition': undefined, 'count': undefined}, index);
+                loadResults(keyword, offset + 1, index);
+            }
             else {
                 renderSklikResults(searchedKeyword, index);
                 return searchedKeyword
@@ -324,7 +329,7 @@ function renderSklikResults(searchedKeywordResult, index) {
     if (searchedKeywordResult['count'] != undefined) {
         number = searchedKeywordResult['count'];
     } else {
-        number = '0';
+        number = '-';
     }
 
     $(".price_sklik").eq(index).text(price);
@@ -432,22 +437,22 @@ function dataForAnalysisExport() {
         var attrs;
         if (window.language == 'cs') {
             attrs = new Array(
-            site.hostname,
-            siteRank(site) + ' %',
-            serpCount(),
-            site.google_serp_count,
-            site.seznam_serp_count,
-            site.google_serp_count + site.seznam_serp_count,
-            googleSerpPercent(site) + ' %',
-            seznamSerpPercent(site) + ' %',
-            serpPercent(site) + ' %');
+                site.hostname,
+                siteRank(site) + ' %',
+                serpCount(),
+                site.google_serp_count,
+                site.seznam_serp_count,
+                site.google_serp_count + site.seznam_serp_count,
+                googleSerpPercent(site) + ' %',
+                seznamSerpPercent(site) + ' %',
+                serpPercent(site) + ' %');
         } else {
             attrs = new Array(
-            site.hostname,
-            siteRank(site) + ' %',
-            serpCount(),
-            site.google_serp_count,
-            serpPercent(site) + ' %');
+                site.hostname,
+                siteRank(site) + ' %',
+                serpCount(),
+                site.google_serp_count,
+                serpPercent(site) + ' %');
         }
         data.push(attrs);
     }
@@ -811,4 +816,4 @@ function googleHost() {
         default:
             return 'com';
     }
-} 
+}
