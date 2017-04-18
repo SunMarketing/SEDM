@@ -10,7 +10,7 @@
 // @updateURL     https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.user.js
 // @icon          http://www.sunitka.cz/sedm/images/sedm.png
 // @description   SEDM je nástroj sloužící k analýze výsledků vyhledávaní fulltextových vyhledávačů Google a Seznam.cz. Za pomocí nástroje lze snadno získat data o hledanosti až padesáti klíčových slov ve vyhledávači Seznam.cz, počet nalezených výsledků na Seznam.cz i Google. Autory skriptu jsou Víťa Krchov, Matěj Velička a společnost Sun Marketing.
-// @version       0.39
+// @version       0.40
 // @date          2017-03-15
 // @grant         GM_xmlhttpRequest
 // ==/UserScript==
@@ -198,32 +198,48 @@ function getSeznamResultCount(keyword, index) {
         onload: function (response) {
             var div = document.createElement("div");
             div.innerHTML = response.responseText;
-            if ($(div).find('#resultCount strong').length !== undefined && $(div).find('#resultCount strong').length > 0) {
-                console.log('exit 1');
-                var result_count = $($(div).find('#resultCount strong')[2]).text();
+            //if ($(div).find('#resultCount strong').length !== undefined && $(div).find('#resultCount strong').length > 0) {
+            //    console.log('exit 1');
+            //    var result_count = $($(div).find('#resultCount strong')[2]).text();
 
+            //    window.seznam_serp_count++;
+            //    $(div).find('.result').each(function (index) {
+            //        analyseUrl($(this).find('.info a').prop('href'), index + 1, 'seznam');
+            //    });
+
+            //    var keyword_index = window.seznam_not_processed_keywords.indexOf(keyword);
+            //    if (keyword_index != -1) {
+            //        window.seznam_not_processed_keywords.splice(keyword_index, 1);
+            //        window.keyword_logs['seznam'].splice(window.keyword_logs['seznam'].indexOf(keyword), 1);
+            //    }
+            //} else {
+            //    console.log('exit 2');
+            //    if (window.seznam_not_processed_keywords.indexOf(keyword) == -1) {
+            //        //window.seznam_not_processed_keywords.push(keyword);
+            //        console.log('exit 3');
+            //    } else {
+            //        if (window.keyword_logs['seznam'].indexOf(keyword) == -1) {
+            //            window.keyword_logs['seznam'].push(keyword);
+            //        }
+            //    }
+            //    var result_count = '-';
+            //}
+
+            $.getJSON("https://query.yahooapis.com/v1/public/yql?q=select%20channel.opensearch%3AtotalResults%20from%20xml%20where%20url%20%3D%20'https%3A%2F%2Fsearch.seznam.cz%2F%3Fq%3D".keyword."%26format%3Drss'%20&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", function (data) {
+                // Get the element with id summary and set the inner text to the result.
+                result_count = data.query.results.rss.channel.totalResults;
                 window.seznam_serp_count++;
-                $(div).find('.result').each(function (index) {
-                    analyseUrl($(this).find('.info a').prop('href'), index + 1, 'seznam');
-                });
+                data.query.results.rss.channel.item.each(function(index) {
+                    analyseUrl(index.link, index + 1, 'seznam');
+                }),
 
                 var keyword_index = window.seznam_not_processed_keywords.indexOf(keyword);
                 if (keyword_index != -1) {
                     window.seznam_not_processed_keywords.splice(keyword_index, 1);
                     window.keyword_logs['seznam'].splice(window.keyword_logs['seznam'].indexOf(keyword), 1);
                 }
-            } else {
-                console.log('exit 2');
-                if (window.seznam_not_processed_keywords.indexOf(keyword) == -1) {
-                    //window.seznam_not_processed_keywords.push(keyword);
-                    console.log('exit 3');
-                } else {
-                    if (window.keyword_logs['seznam'].indexOf(keyword) == -1) {
-                        window.keyword_logs['seznam'].push(keyword);
-                    }
-                }
-                var result_count = '-';
-            }
+            });
+
             tr_element.find('.result_count_seznam').text(result_count);
         }
     });
@@ -301,7 +317,7 @@ function loadResults(keyword, offset, index) {
 
             }
             if (searchedKeyword === undefined) {
-                renderSklikResults({'avgCpc': undefined, 'competition': undefined, 'count': undefined}, index);
+                renderSklikResults({ 'avgCpc': undefined, 'competition': undefined, 'count': undefined }, index);
                 loadResults(keyword, offset + 1, index);
             }
             else {
@@ -400,15 +416,15 @@ function checkSklikSession() {
         url: 'https://www.sklik.cz/campaigns',
         onload: function (response) {
             patt = new RegExp('Sklik.cz');
-            if (patt.test(response.responseText)) {
+            //if (patt.test(response.responseText)) {
                 $('.install .sklik .check').addClass('uncheck');
                 $('#install').removeClass('hide');
                 $('#tool').addClass('hide');
-            } else {
+            /*} else {
                 $('.install .sklik .check').removeClass('uncheck');
                 $('#install').addClass('hide');
                 $('#tool').removeClass('hide');
-            }
+            }*/
         }
     });
 }
@@ -647,7 +663,7 @@ function googleSerpPercent(site) {
 
 function seznamSerpPercent(site) {
     console.log(window.seznam_serp_count);
-    if(isNaN(window.seznam_serp_count) || window.seznam_serp_count ===0)
+    if (isNaN(window.seznam_serp_count) || window.seznam_serp_count === 0)
         return ' -';
 
     return roundNumber((100 / window.seznam_serp_count) * site.seznam_serp_count);
