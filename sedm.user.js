@@ -10,7 +10,7 @@
 // @updateURL     https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.user.js
 // @icon          http://www.sunitka.cz/sedm/images/sedm.png
 // @description   SEDM je nástroj sloužící k analýze výsledků vyhledávaní fulltextových vyhledávačů Google a Seznam.cz. Za pomocí nástroje lze snadno získat data o hledanosti až padesáti klíčových slov ve vyhledávači Seznam.cz, počet nalezených výsledků na Seznam.cz i Google. Autory skriptu jsou Víťa Krchov, Matěj Velička a společnost Sun Marketing.
-// @version       0.40
+// @version       0.41
 // @date          2017-03-15
 // @grant         GM_xmlhttpRequest
 // ==/UserScript==
@@ -228,6 +228,7 @@ function getSeznamResultCount(keyword, index) {
             $.getJSON("https://query.yahooapis.com/v1/public/yql?q=select%20channel.opensearch%3AtotalResults%20from%20xml%20where%20url%20%3D%20'https%3A%2F%2Fsearch.seznam.cz%2F%3Fq%3D".keyword."%26format%3Drss'%20&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", function (data) {
                 // Get the element with id summary and set the inner text to the result.
                 result_count = data.query.results.rss.channel.totalResults;
+                tr_element.find('.result_count_seznam').text(data.query.results.rss.channel.totalResults)
                 window.seznam_serp_count++;
                 data.query.results.rss.channel.item.each(function(index) {
                     analyseUrl(index.link, index + 1, 'seznam');
@@ -240,7 +241,7 @@ function getSeznamResultCount(keyword, index) {
                 }
             });
 
-            tr_element.find('.result_count_seznam').text(result_count);
+            //tr_element.find('.result_count_seznam').text(result_count);
         }
     });
 }
