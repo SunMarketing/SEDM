@@ -10,7 +10,7 @@
 // @updateURL     https://raw.githubusercontent.com/SunMarketing/SEDM/master/sedm.user.js
 // @icon          http://www.sunitka.cz/sedm/images/sedm.png
 // @description   SEDM je nástroj sloužící k analýze výsledků vyhledávaní fulltextových vyhledávačů Google a Seznam.cz. Za pomocí nástroje lze snadno získat data o hledanosti až padesáti klíčových slov ve vyhledávači Seznam.cz, počet nalezených výsledků na Seznam.cz i Google. Autory skriptu jsou Víťa Krchov, Matěj Velička a společnost Sun Marketing.
-// @version       0.42
+// @version       0.43
 // @date          2017-04-19
 // @grant         GM_xmlhttpRequest
 // ==/UserScript==
@@ -193,8 +193,9 @@ function getSeznamResultCount(keyword, index) {
     var tr_element = $($('#keywords_table tbody tr')[index]);
 
     var div = document.createElement("div");
+    replacecSpaceInKeyword = keyword.replace(" ","%2B");
 
-    $.getJSON("https://query.yahooapis.com/v1/public/yql?q=select%20*from%20xml%20where%20url%20%3D%20'https%3A%2F%2Fsearch.seznam.cz%2F%3Fq%3D" + keyword + "%26format%3Drss'%20&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", function (data) {
+    $.getJSON("https://query.yahooapis.com/v1/public/yql?q=select%20*from%20xml%20where%20url%20%3D%20'https%3A%2F%2Fsearch.seznam.cz%2F%3Fq%3D" + replacecSpaceInKeyword + "%26format%3Drss'%20&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", function (data) {
         // Get the element with id summary and set the inner text to the result.
         result_count = data.query.results.rss.channel.totalResults;
         tr_element.find('.result_count_seznam').text(data.query.results.rss.channel.totalResults);
@@ -205,11 +206,11 @@ function getSeznamResultCount(keyword, index) {
             analyseUrl(index.link, index + 1, 'seznam');
         });
 
-        var keyword_index = window.seznam_not_processed_keywords.indexOf(keyword);
+        var keyword_index = window.seznam_not_processed_keywords.indexOf(keyword.replace(/ /g,"+"));
         console.log(keyword_index);
         if (keyword_index != -1) {
             window.seznam_not_processed_keywords.splice(keyword_index, 1);
-            window.keyword_logs['seznam'].splice(window.keyword_logs['seznam'].indexOf(keyword), 1);
+            window.keyword_logs['seznam'].splice(window.keyword_logs['seznam'].indexOf(keyword.replace(/ /g,"+")), 1);
         }
     });
     
